@@ -38,11 +38,18 @@ class PaperExtractor:
             return 'no-tex'
         html_path = self.root / 'htmls' / subpath / 'index.html'
         try:
+            print(f"[DEBUG] Entering `latex.to_html`")
             html = self.latex.to_html(unpack_path)
+            print(f"[DEBUG] Entering `html_path.parent.mkdir`")
             html_path.parent.mkdir(parents=True, exist_ok=True)
+            print(f"[DEBUG] Entering `html_path.write_text`")
             html_path.write_text(html, 'utf-8')
-        except LatexConversionError:
-            return 'processing-error'
+            print(f"[DEBUG] Leaving...")
+        # except LatexConversionError:
+        #     return 'processing-error'
+        except Exception as all_err:
+            print('processing-error')
+            return all_err
 
         text_path = self.root / 'papers' / subpath / 'text.json'
         doc = PaperText.from_html(html, arxiv_id)

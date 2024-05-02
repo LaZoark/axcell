@@ -62,13 +62,25 @@ class LatexConverter:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         try:
-            self.client.containers.run("arxivvanity/engrafo:b3db888fefa118eacf4f13566204b68ce100b3a6", command, remove=True, volumes=volumes)
-        except ContainerError as err:
+            print('#'*100)
+            print(volumes)
+            print(command)
+            print('#'*100)
+            print("""[DEBUG] Entering `self.client.containers.run("arxivvanity/engrafo:latest", command, volumes=volumes)`...""")
+            # print("""[DEBUG] Entering `self.client.containers.run("arxivvanity/engrafo:b3db888fefa118eacf4f13566204b68ce100b3a6", command, remove=True, volumes=volumes)`...""")
+            # self.client.containers.run("arxivvanity/engrafo:b3db888fefa118eacf4f13566204b68ce100b3a6", command, remove=True, volumes=volumes)
+            # self.client.containers.run("arxivvanity/engrafo:b3db888fefa118eacf4f13566204b68ce100b3a6", command, volumes=volumes)
+            self.client.containers.run("arxivvanity/engrafo:latest", command, volumes=volumes, stderr=True)
+            print("""[DEBUG] leaving `self.client.containers.run("arxivvanity/engrafo:b3db888fefa118eacf4f13566204b68ce100b3a6", command, remove=True, volumes=volumes)`...""")
+        # except ContainerError as err:
+        except Exception as err:
             if err.exit_status == MAGIC_EXIT_ERROR:
                 raise LatexConversionError("LaTeXML was unable to convert source code of this paper")
             if "Unable to find any suitable tex file" in err.stderr.decode('utf-8'):
                 raise LatexConversionError("Unable to find any suitable tex file")
-            raise
+            else:
+                print(err)
+            raise err
 
     # todo: check for errors
     def clean_html(self, path):
@@ -78,10 +90,14 @@ class LatexConverter:
         return str(soup)
 
     def to_html(self, source_dir):
+        print("Entering `TemporaryDirectory() as output_dir:`...")
         with TemporaryDirectory() as output_dir:
+            print("Entering `output_dir = Path(output_dir)`...")
             output_dir = Path(output_dir)
             try:
+                print("Entering `self.latex2html(source_dir, output_dir)`...")
                 self.latex2html(source_dir, output_dir)
+                print("""Entering `return self.clean_html(output_dir / "index.html")`...""")
                 return self.clean_html(output_dir / "index.html")
             except ContainerError as err:
                 raise LatexConversionError from err
